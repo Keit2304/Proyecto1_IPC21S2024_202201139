@@ -163,7 +163,6 @@ lista_pisos = ListaEnlazadaPisos()
 piso_ejemplo01 = NodoPiso("ejemplo07", 2, 4, 1, 1)
 piso_ejemplo01.agregar_patron("cod11", "BNBNBBBN")
 piso_ejemplo01.agregar_patron("cod12", "NBNBBBBB")
-piso_ejemplo01.agregar_patron("cod12", "BB")
 
 piso_ejemplo02 = NodoPiso("ejemplo06", 3, 3, 1, 1)
 piso_ejemplo02.agregar_patron("cod21", "BNNNBNBBB")
@@ -217,17 +216,22 @@ def cambiar_patron(piso_nombre, codigo_patron_inicial, codigo_patron_final):
             costo_volteo = 0
             costo_intercambio = 0
             instrucciones = []
+            azulejos_modificados = set()  # Conjunto para almacenar los índices de los azulejos ya modificados
 
             for i in range(len(patron_inicial)):
                 if patron_inicial[i] != patron_final[i]:
-                    if patron_inicial[i] == 'B':
+                    if patron_inicial[i] == 'B' and i not in azulejos_modificados:
                         costo_volteo += int(piso_encontrado.F)  # Convertir a entero
                         instrucciones.append(f"Voltear azulejo {i + 1}")
-                    else:
-                        indice_intercambio = buscar_azulejo_cercano(patron_inicial, patron_final, i)
-                        if indice_intercambio != -1:
-                            costo_intercambio += int(piso_encontrado.S)  # Convertir a entero
-                            instrucciones.append(f"Intercambiar azulejo {i + 1} con azulejo {indice_intercambio + 1}")
+                        azulejos_modificados.add(i)  # Registrar el azulejo modificado
+                    elif i not in azulejos_modificados:
+                        indice_intercambio = buscar_azulejo_cercano(patron_actual=patron_inicial, nuevo_patron=patron_final, indice=i)
+                        if indice_intercambio != -1 and indice_intercambio not in azulejos_modificados:
+                            if patron_inicial[indice_intercambio] != patron_final[indice_intercambio]:  # Verificar si el intercambio es realmente necesario
+                                costo_intercambio += int(piso_encontrado.S)  # Convertir a entero
+                                instrucciones.append(f"Intercambiar azulejo {i + 1} con azulejo {indice_intercambio + 1}")
+                                azulejos_modificados.add(i)  # Registrar el azulejo modificado
+                                azulejos_modificados.add(indice_intercambio)  # Registrar el azulejo modificado
 
             costo_total = costo_volteo + costo_intercambio
             print(f"Instrucciones para cambiar el patrón '{patron_inicial}' al patrón '{patron_final}':")
@@ -240,13 +244,17 @@ def cambiar_patron(piso_nombre, codigo_patron_inicial, codigo_patron_final):
         print(f"No se encontró el piso '{piso_nombre}'.")
 
 def buscar_azulejo_cercano(patron_actual, nuevo_patron, indice):
+    # Buscar el azulejo más cercano que sea diferente entre los patrones
     for i in range(indice + 1, len(patron_actual)):
-        if patron_actual[i] != nuevo_patron[i] and nuevo_patron[i] == nuevo_patron[indice]:
+        if patron_actual[i] != nuevo_patron[i]:
             return i
     for i in range(indice - 1, -1, -1):
-        if patron_actual[i] != nuevo_patron[i] and nuevo_patron[i] == nuevo_patron[indice]:
+        if patron_actual[i] != nuevo_patron[i]:
             return i
     return -1
+
+
+
 
 # Menú para que el usuario ingrese piso y patrón
 while True:
